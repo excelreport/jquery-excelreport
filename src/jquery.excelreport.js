@@ -299,6 +299,7 @@ if (typeof(flect) == "undefined") flect = {};
 						if (text && !isMultiNamedCell($div)) {
 							var labelWidth = getRealWidth($span);
 							w -= labelWidth + 4;
+							$span.css("width", (labelWidth + 8) + "px");
 							$input.css("margin-left", (labelWidth + 8) + "px");
 						} else {
 							$span.remove();
