@@ -443,18 +443,6 @@ if (typeof(flect) == "undefined") flect = {};
 			"report" : report
 		});
 	};
-	$.fn.downloadExcel = function(user, template, options) {
-		var processor = new Processor(user, template, options),
-			formData = new FormData($(this)[0]);
-		processor.prepare(formData);
-	};
-	$.fn.downloadPdf = function(user, template, options) {
-		options = options || {};
-		options.contextUrl = "pdf";
-		var processor = new Processor(user, template, options),
-			formData = new FormData($(this)[0]);
-		processor.prepare(formData);
-	};
 	$.fn.uploadExcel = function(options, callback) {
 		if (arguments.length == 1) {
 			callback = options;
@@ -616,11 +604,19 @@ if (typeof(flect) == "undefined") flect = {};
 			}
 			$.extend(defaults, params);
 		}
-		function downloadPdf(params) {
-			throw "Not implemented yet";
-		}
-		function downloadExcel(params) {
-			throw "Not implemented yet";
+		function download(params, pdf) {
+			var user = params.user,
+				template = params.template,
+				data = params.data,
+				options = $.extend({}, params);
+			delete options.user;
+			delete options.template;
+			delete options.data;
+			if (!options.baseUrl) {
+				options.baseUrl = defaults.baseUrl;
+			}
+			options.contextUrl = pdf ? "pdf" : "download";
+			new Processor(user, template, options).prepare(data);
 		}
 		if (typeof method === "object") {
 			params = method;
@@ -631,10 +627,10 @@ if (typeof(flect) == "undefined") flect = {};
 				configure(params);
 				break;
 			case "downloadPdf":
-				downloadPdf(params);
+				download(params, true);
 				break;
 			case "downloadExcel":
-				downloadExcel(params);
+				download(params, false);
 				break;
 			default:
 				throw "Unknown method: " + method;
