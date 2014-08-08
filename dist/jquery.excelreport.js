@@ -293,6 +293,11 @@ if (typeof(flect) == "undefined") flect = {};
 							$input = $("<textarea></textarea>");
 						} else {
 							$input = $("<input type='text'/>");
+							if ($span.hasClass("cell-ar")) {
+								$input.css("text-align", "right");
+							} else if ($span.hasClass("cell-ac")) {
+								$input.css("text-align", "center");
+							} 
 						}
 					}
 					if (typeof($input) != "string") {
