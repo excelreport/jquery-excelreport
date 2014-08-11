@@ -461,6 +461,37 @@ if (typeof(flect) == "undefined") flect = {};
 		processor.prepare(formData, callback);
 	};
 	$.fn.excelReport = function(method, params, param2) {
+		//Private
+		function normalizeData($el, data) {
+			var ret = {};
+			$.each(data, function(key, value) {
+				var $div = $el.find("#" + key);
+				if ($div.length) {
+					ret[key] = value;
+				} else {
+					$div = $el.find("[data-name=" + key + "]");
+					if ($div.length) {
+						if ($.isArray(value)) {
+							var idx = 0;
+							$div.each(function() {
+								var $cell = $(this),
+									id = $cell.attr("id"),
+									isFormula = $cell.attr("data-formula");
+								if (!isFormula) {
+									ret[id] = value[idx++];
+								}
+								return idx < value.length;
+							});
+						} else {
+							var id = $($div.get(0)).attr("id");
+							ret[id] = value;
+						}
+					}
+				}
+			});
+			return ret;
+		}
+		//Public
 		function showExcel($el, params) {
 			var baseUrl = params.baseUrl || defaults.baseUrl,
 				user = params.user,
@@ -521,35 +552,6 @@ if (typeof(flect) == "undefined") flect = {};
 			}
 			return ret;
 		}
-		function normalizeData($el, data) {
-			var ret = {};
-			$.each(data, function(key, value) {
-				var $div = $el.find("#" + key);
-				if ($div.length) {
-					ret[key] = value;
-				} else {
-					$div = $el.find("[data-name=" + key + "]");
-					if ($div.length) {
-						if ($.isArray(value)) {
-							var idx = 0;
-							$div.each(function() {
-								var $cell = $(this),
-									id = $cell.attr("id"),
-									isFormula = $cell.attr("data-formula");
-								if (!isFormula) {
-									ret[id] = value[idx++];
-								}
-								return idx < value.length;
-							});
-						} else {
-							var id = $($div.get(0)).attr("id");
-							ret[id] = value;
-						}
-					}
-				}
-			});
-			return ret;
-		}
 		function updateCells($el, p1, p2) {
 			var params = p1,
 				con = $.data($el.get(0), "connection");
@@ -580,19 +582,33 @@ if (typeof(flect) == "undefined") flect = {};
 				});
 			}
 		}
+		function download($el, method, params) {
+			var bForm = $el[0].tagName.toLowerCase() == "form",
+				postData = bForm ? new FormData($el[0]) : data($el),
+				newParams = $.extend({}, params);
+			newParams.data = postData;
+			$.excelReport(method, newParams);
+		}
+		//jQuery
 		if (typeof method === "object") {
 			params = method;
 			method = "showExcel";
 		}
 		switch (method) {
 			case "showExcel": 
-				showExcel($(this), params);
+				showExcel(this, params);
 				return this;
 			case "data":
-				return data($(this), !!params);
+				return data(this, !!params);
 			case "updateCells":
-				updateCells($(this), params, param2);
+				updateCells(this, params, param2);
 				return this;
+			case "downloadPdf":
+				download(this, method, params);
+				break;
+			case "downloadExcel":
+				download(this, method, params);
+				break;
 			default:
 				throw "Unknown method: " + method;
 		}
@@ -611,6 +627,13 @@ if (typeof(flect) == "undefined") flect = {};
 			$.extend(defaults, params);
 		}
 		function download(params, pdf) {
+			function appendData(key, value) {
+				if (isFormData(data)) {
+					data.append(key, value);
+				} else {
+					data[key] = value;
+				}
+			}
 			var user = params.user,
 				template = params.template,
 				data = params.data,
@@ -620,6 +643,16 @@ if (typeof(flect) == "undefined") flect = {};
 			delete options.data;
 			if (!options.baseUrl) {
 				options.baseUrl = defaults.baseUrl;
+			}
+			if (pdf && options.pdf) {
+				$.each(options.pdf, function(key, value) {
+					appendData("pdf." + key, value);
+				});
+				delete options.pdf;
+			}
+			if (options.filename) {
+				appendData("filename", options.filename);
+				delete options.filename;
 			}
 			options.contextUrl = pdf ? "pdf" : "download";
 			new Processor(user, template, options).prepare(data);
