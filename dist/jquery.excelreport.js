@@ -66,6 +66,11 @@ if (typeof(flect) == "undefined") flect = {};
 	function makeUrl(options, path) {
 		return options.baseUrl + "/" + options.contextUrl + path;
 	}
+	function addAuthorization(params, apikey) {
+		params.headers = {
+			"X-Auth-Token": apikey
+		};
+	}
 	function ProcessingDialog($el, options) {
 		function init() {
 			if ($el.find("button").length === 0) {
@@ -168,6 +173,9 @@ if (typeof(flect) == "undefined") flect = {};
 			};
 			if (!isUpload()) {
 				 params.url += "/" + user + "/" + template;
+			}
+			if (options.apikey) {
+				addAuthorization(params, options.apikey);
 			}
 			if (isFormData(data)) {
 				params.processData = false;
@@ -301,11 +309,16 @@ if (typeof(flect) == "undefined") flect = {};
 						}
 					}
 					if (typeof($input) != "string") {
-						if (text && !isMultiNamedCell($div)) {
-							var labelWidth = getRealWidth($span);
-							w -= labelWidth + 4;
-							$span.css("width", (labelWidth + 8) + "px");
-							$input.css("margin-left", (labelWidth + 8) + "px");
+						if (text) {
+							if (isMultiNamedCell($div)) {
+								$input.val(text);
+								$span.remove();
+							} else {
+								var labelWidth = getRealWidth($span);
+								w -= labelWidth + 4;
+								$span.css("width", (labelWidth + 8) + "px");
+								$input.css("margin-left", (labelWidth + 8) + "px");
+							}
 						} else {
 							$span.remove();
 						}
@@ -428,6 +441,9 @@ if (typeof(flect) == "undefined") flect = {};
 			if (isFormData(data)) {
 				params.processData = false;
 				params.contentType = false;
+			}
+			if (options.apikey) {
+				addAuthorization(params, options.apikey);
 			}
 			$.ajax(params);
 		}
