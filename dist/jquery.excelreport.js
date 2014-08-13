@@ -350,7 +350,9 @@ if (typeof(flect) == "undefined") flect = {};
 				return url + "/liveform/" + user + "/" + template;
 			}
 			var url = buildUrl(),
-				con = new room.Connection(url);
+				con = new room.Connection({
+					"url" : url
+				});
 			con.on("calced", function(data) {
 				$.each(data, function(key, value) {
 					var $span = $("#" + key + " span");
@@ -367,6 +369,18 @@ if (typeof(flect) == "undefined") flect = {};
 					$div.excelToChart(chart);
 					$div.css("position", "absolute");
 				}
+			});
+			con.onOpen(function(event) {
+				con.request({
+					"command" : "available",
+					"success" : function(data) {
+						if (data != "OK") {
+							alert(data);
+							con.close();
+							$.removeData($el.get(0), "connection");
+						}
+					}
+				});
 			});
 			con.sendNoop(30, !room.utils.isMobile());
 
@@ -449,7 +463,7 @@ if (typeof(flect) == "undefined") flect = {};
 		}
 		switch (arguments.length) {
 			case 0: 
-				options.error("user is required.");
+				alert("user is required.");
 				break;
 			case 1:
 				user = baseUrl;
