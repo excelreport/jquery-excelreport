@@ -41,14 +41,14 @@ module.exports = function(grunt) {
                 files: [{
                     expand: true,
                     cwd: "dist",
-                    src: "*.js",
-                    dest: "../report2/public/javascripts"
+                    src: "*.*",
+                    dest: "../report2/public/javascripts/client"
                 },
                 {
                     expand: true,
                     cwd: "dist/i18n",
                     src: "*.js",
-                    dest: "../report2/public/javascripts/i18n"
+                    dest: "../report2/public/javascripts/client/i18n"
                 }]
             }
         },

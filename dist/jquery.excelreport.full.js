@@ -8765,20 +8765,24 @@ if (typeof(flect) == "undefined") flect = {};
 		//jQuery
 		if (typeof method === "object") {
 			params = method;
-			method = "showExcel";
+			method = "show";
 		}
 		switch (method) {
+			case "show":
 			case "showExcel": 
 				showExcel(this, params);
 				return this;
 			case "data":
 				return data(this, !!params);
+			case "update":
 			case "updateCells":
 				updateCells(this, params, param2);
 				return this;
+			case "pdf":
 			case "downloadPdf":
 				download(this, method, params);
 				break;
+			case "excel":
 			case "downloadExcel":
 				download(this, method, params);
 				break;
@@ -8838,9 +8842,11 @@ if (typeof(flect) == "undefined") flect = {};
 			case "configure":
 				configure(params);
 				break;
+			case "pdf":
 			case "downloadPdf":
 				download(params, true);
 				break;
+			case "excel":
 			case "downloadExcel":
 				download(params, false);
 				break;
