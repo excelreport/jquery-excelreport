@@ -20,12 +20,6 @@ module.exports = function(grunt) {
             dist: {
                 files: [{
                     expand: true,
-                    cwd: "src",
-                    src: "*.js",
-                    dest: "dist"
-                },
-                {
-                    expand: true,
                     cwd: "src/i18n",
                     src: "*.js",
                     dest: "dist/i18n"
@@ -53,13 +47,27 @@ module.exports = function(grunt) {
             }
         },
         concat: {
+            core : {
+                src : [
+                    "src/intro.txt",
+                    "src/constant.js",
+                    "src/enum.js",
+                    "src/functions.js",
+                    "src/ruleManager.js",
+                    "src/processor.js",
+                    "src/excelReport.js",
+                    "src/jqueryImpl.js",
+                    "src/outro.txt"
+                ],
+                dest: "dist/jquery.excelreport.js"
+            },
             full : {
                 src : [
                     "bower_components/flotr2/flotr2.js",
                     "bower_components/roomframework/dist/roomframework.js",
                     "bower_components/excel2canvas/dist/jquery.excel2canvas.js",
                     "bower_components/excel2canvas/dist/jquery.excel2chart.flotr2.js",
-                    "src/jquery.excelreport.js"
+                    "dist/jquery.excelreport.js"
                 ],
                 dest: "dist/jquery.excelreport.full.js"
             },
@@ -67,7 +75,7 @@ module.exports = function(grunt) {
                 src : [
                     "bower_components/roomframework/dist/roomframework.js",
                     "bower_components/excel2canvas/dist/jquery.excel2canvas.js",
-                    "src/jquery.excelreport.js"
+                    "dist/jquery.excelreport.js"
                 ],
                 dest: "dist/jquery.excelreport.nochart.js"
             }
@@ -93,14 +101,14 @@ module.exports = function(grunt) {
                 files: [
                     'src/*.js'
                 ],
-                tasks: ['jshint', 'copy:dist', 'concat', 'uglify', "copy:app"]
+                tasks: ['jshint', 'concat:core', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify', "copy:app"]
             }
         }
     });
  
     loadDependencies(grunt.config("pkg").devDependencies);
 
-    grunt.registerTask('default', [ 'jshint', 'copy:dist', 'concat', 'uglify']);
+    grunt.registerTask('default', [ 'jshint', 'concat:core', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify']);
     grunt.registerTask('cp', [ 'copy:app']);
 
 };

@@ -1,0 +1,4 @@
+if (typeof(flect) == "undefined") flect = {};
+
+(function ($) {
+"use strict";
