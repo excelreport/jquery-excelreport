@@ -54,6 +54,7 @@ module.exports = function(grunt) {
                     "src/enum.js",
                     "src/functions.js",
                     "src/ruleManager.js",
+                    "src/popup.js",
                     "src/processor.js",
                     "src/excelReport.js",
                     "src/jqueryImpl.js",
@@ -116,7 +117,8 @@ module.exports = function(grunt) {
         watch: {
             scripts: {
                 files: [
-                    'src/*.js'
+                    'src/*.js',
+                    'src/*.css'
                 ],
                 tasks: ['jshint', 'concat:core', 'concat:css', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify', 'cssmin', "copy:app"]
             }

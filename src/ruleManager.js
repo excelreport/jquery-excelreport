@@ -1,9 +1,20 @@
 function defaultOnRule(eventName, params) {
+	var popup = null,
+		$input = $(this);
 	switch (eventName) {
 		case "prompt":
+			popup = new Popup(params.title, params.text, false);
+			$input.blur(function() {
+				popup.hide();
+				$input.unbind("blur");
+			});
 			break;
 		case "error":
+			popup = new Popup(params.title, params.text, true);
 			break;
+	}
+	if (popup) {
+		popup.show($input);
 	}
 }
 function RuleManager(rules) {
@@ -71,7 +82,17 @@ function RuleManager(rules) {
 	function isNumberRule(rule) {
 		return rule.vt == VT_INT || rule.vt == VT_DECIMAL;
 	}
+	function onFocus() {
+		var $input = $(this),
+			name = $input.attr("name"),
+			id = $input.parent("div").attr("id"),
+			rule = getRule(name, id);
+		if (rule && rule.prompt) {
+			defaults.onRule.call(this, "prompt", rule.prompt);
+		}
+	}
 	$.extend(this, {
-		"buildInput" : buildInput
+		"buildInput" : buildInput,
+		"onFocus" : onFocus
 	});
 }

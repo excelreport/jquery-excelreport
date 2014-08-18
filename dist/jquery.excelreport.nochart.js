@@ -868,11 +868,22 @@ function addAuthorization(params, apikey) {
 }
 
 function defaultOnRule(eventName, params) {
+	var popup = null,
+		$input = $(this);
 	switch (eventName) {
 		case "prompt":
+			popup = new Popup(params.title, params.text, false);
+			$input.blur(function() {
+				popup.hide();
+				$input.unbind("blur");
+			});
 			break;
 		case "error":
+			popup = new Popup(params.title, params.text, true);
 			break;
+	}
+	if (popup) {
+		popup.show($input);
 	}
 }
 function RuleManager(rules) {
@@ -940,11 +951,52 @@ function RuleManager(rules) {
 	function isNumberRule(rule) {
 		return rule.vt == VT_INT || rule.vt == VT_DECIMAL;
 	}
+	function onFocus() {
+		var $input = $(this),
+			name = $input.attr("name"),
+			id = $input.parent("div").attr("id"),
+			rule = getRule(name, id);
+		if (rule && rule.prompt) {
+			defaults.onRule.call(this, "prompt", rule.prompt);
+		}
+	}
 	$.extend(this, {
-		"buildInput" : buildInput
+		"buildInput" : buildInput,
+		"onFocus" : onFocus
 	});
 }
 
+var $promptDiv = $("<div class='exrep-popup' style='display:none;'/>"),
+	$errorDiv = $("<div class='exrep-popup exrep-error' style='display:none;'/>");
+function Popup(title, text, error) {
+	function show($input) {
+		var $parent = $input.parent("div"),
+			offset = $parent.position();
+		$div.appendTo($parent.parent()).css({
+			"top" : offset.top - 60,
+			"left" : offset.left + 20
+		}).show();
+	}
+	function hide() {
+		$div.hide();
+	}
+	var $div = error ? $errorDiv : $promptDiv,
+		$title = null,
+		$content = $("<div class='exrep-popup-content'/>");
+	$div.empty();
+	if (title) {
+		$title = $("<div class='exrep-popup-title'/>");
+		$title.text(title);
+		$div.append($title);
+	}
+	$content.text(text);
+	$div.append($content);
+
+	$.extend(this, {
+		"show" : show,
+		"hide" : hide
+	});
+}
 function ProcessingDialog($el, options) {
 	function init() {
 		if ($el.find("button").length === 0) {
@@ -1207,6 +1259,9 @@ flect.ExcelReport = function(baseUrl, user) {
 					});
 					$input.addClass("exrep-input");
 					$input.attr("name", name);
+					if (ruleMan) {
+						$input.focus(ruleMan.onFocus);
+					}
 				}
 				$div.append($input);
 			}

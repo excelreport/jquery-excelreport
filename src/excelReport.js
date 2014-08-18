@@ -67,6 +67,9 @@ flect.ExcelReport = function(baseUrl, user) {
 					});
 					$input.addClass("exrep-input");
 					$input.attr("name", name);
+					if (ruleMan) {
+						$input.focus(ruleMan.onFocus);
+					}
 				}
 				$div.append($input);
 			}
