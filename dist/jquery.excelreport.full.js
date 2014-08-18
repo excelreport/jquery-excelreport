@@ -8145,25 +8145,35 @@ if (typeof(flect) == "undefined") flect = {};
 
 (function ($) {
 	"use strict";
-	var MSG = {
-		"Prepared" : "Preparing",
-		"Processing" : "Processing",
-		"Finished" : "Finished",
-		"Error" : "Error",
-		"Canceled" : "Canceled",
-		"Cancel" : "Cancel"
-	}, defaults = {
-		"baseUrl" : "",
-		"contextUrl" : "download",
-		"showLoading" : true,
-		"width" : 320,
-		"height" : 120,
-		"top" : "center",
-		"left" : "center",
-		"error" : function(msg) {
-			alert(msg);
-		}
-	};
+	var 
+		VT_ANY = 0,
+		VT_INT = 1,
+		VT_DECIMAL = 2,
+		VT_LIST = 3,
+		VT_DATE = 4,
+		VT_TIME = 5,
+		VT_TEXT_LENGTH = 6,
+		VT_FORMULA = 7,
+		MSG = {
+			"Prepared" : "Preparing",
+			"Processing" : "Processing",
+			"Finished" : "Finished",
+			"Error" : "Error",
+			"Canceled" : "Canceled",
+			"Cancel" : "Cancel"
+		}, defaults = {
+			"baseUrl" : "",
+			"contextUrl" : "download",
+			"showLoading" : true,
+			"width" : 320,
+			"height" : 120,
+			"top" : "center",
+			"left" : "center",
+			"error" : function(msg) {
+				alert(msg);
+			},
+			"onRule" : defaultOnRule
+		};
 	if (flect.excelreport && flect.excelreport.MSG) {
 		MSG = $.extend(MSG, flect.excelreport.MSG);
 	}
@@ -8213,6 +8223,83 @@ if (typeof(flect) == "undefined") flect = {};
 		params.headers = {
 			"X-Auth-Token": apikey
 		};
+	}
+	function defaultOnRule(eventName, params) {
+		switch (eventName) {
+			case "prompt":
+				break;
+			case "error":
+				break;
+		}
+	}
+	function RuleManager(rules) {
+		function getColStr(str) {
+			return str.match(/[A-Z]+/)[0];
+		}
+		function isTargetCell(range, id) {
+			var idx = range.indexOf(":");
+			if (idx == -1) {
+				return id == range;
+			} else {
+				var topLeft = range.substring(0, idx),
+					bottomRight = range.substring(idx + 1),
+					left = getColStr(topLeft),
+					top = parseInt(topLeft.substring(left.length)),
+					right = getColStr(bottomRight),
+					bottom = parseInt(bottomRight.substring(right.length)),
+					col = getColStr(id),
+					row = parseInt(id.substring(col.length));
+				return col >= left && col <= right && row >= top && row <= bottom;
+			}
+		}
+		function getRule(name, id) {
+			var target = null,
+				ret = null;
+			$.each(rules, function(key, value) {
+				if (key == name) {
+					target = value;
+					return false;
+				}
+				return true;
+			});
+			if (target) {
+				$.each(target, function(idx, rule) {
+					for (var i=0; i<rule.regions.length; i++) {
+						if (isTargetCell(rule.regions[i], id)) {
+							ret = rule;
+							return false;
+						}
+					}
+					return true;
+				});
+			}
+			return ret;
+		}
+		function buildInput(name, id) {
+			var rule = getRule(name, id);
+			if (rule && rule.vt === VT_LIST) {
+				var $sel = $("<select><option value=''></option></select>");
+				$.each(rule.list, function(idx, value) {
+					var $op = $("<option/>");
+					$op.attr("value", value);
+					$op.text(value);
+					$sel.append($op);
+				});
+				return $sel;
+			}
+			if (rule && isNumberRule(rule)) {
+				var $input = $("<input type='text'/>");
+				$input.css("text-align", "right");
+				return $input;
+			}
+			return null;
+		}
+		function isNumberRule(rule) {
+			return rule.vt == VT_INT || rule.vt == VT_DECIMAL;
+		}
+		$.extend(this, {
+			"buildInput" : buildInput
+		});
 	}
 	function ProcessingDialog($el, options) {
 		function init() {
@@ -8419,7 +8506,7 @@ if (typeof(flect) == "undefined") flect = {};
 			ret.contextUrl = context;
 			return ret;
 		}
-		function buildForm($el, buildInput) {
+		function buildForm($el, ruleMan, buildInput) {
 			function getRealWidth($span) {
 				var $temp = $("<span style='display:none;'/>"),
 					ret = 0;
@@ -8429,16 +8516,21 @@ if (typeof(flect) == "undefined") flect = {};
 				$temp.remove();
 				return ret;
 			}
+console.log("buildForm", ruleMan);
 			$el.find(".namedCell").each(function() {
 				var $div = $(this),
 					$span = $div.find("span"),
 					id = $div.attr("id"),
+					name = $div.attr("data-name"),
 					text = $span.text(),
 					isFormula = !!$div.attr("data-formula");
 				if (!isFormula) {
 					var $input = buildInput ? buildInput($div) : null,
 						h = $div.innerHeight(),
 						w = $div.innerWidth();
+					if ($input === null && ruleMan) {
+						$input = ruleMan.buildInput(name, id);
+					}
 					if ($input === null) {
 						if (h > 40) {
 							$input = $("<textarea></textarea>");
@@ -8470,13 +8562,24 @@ if (typeof(flect) == "undefined") flect = {};
 							"height" : (h - 2) + "px"
 						});
 						$input.addClass("cellInput");
-						$input.attr("name", $div.attr("data-name"));
+						$input.attr("name", name);
 					}
 					$div.append($input);
 				}
 			});
 		}
-		function buildLiveForm($el, template) {
+		function buildLiveForm($el, template, form, buildInput) {
+			function insertLogo() {
+				var $img = $("<img/>");
+				$img.attr("src", baseUrl + "/assets/images/PoweredByExcelReport.png");
+				$img.css({
+					"position" : "absolute",
+					"right" : 0,
+					"bottom" : 0,
+					"z-index" : 1000
+				});
+				$el.append($img);
+			}
 			function buildUrl() {
 				var url = "";
 				if (!baseUrl) {
@@ -8516,30 +8619,40 @@ if (typeof(flect) == "undefined") flect = {};
 			con.onOpen(function(event) {
 				con.request({
 					"command" : "available",
+					"data" : {
+						"rules" : form
+					},
 					"success" : function(data) {
-						if (data != "OK") {
-							alert(data);
+						if (data.error) {
+							alert(data.error);
 							con.close();
 							$.removeData($el.get(0), "connection");
+						} else {
+							if (data.license == "Free") {
+								insertLogo();
+							}
+							if (form) {
+								var ruleMan = new RuleManager(data.rules);
+								buildForm($el, ruleMan, buildInput);
+							}
+							$el.find(":input").change(function() {
+								var $input = $(this),
+									$div = $input.parent("div"),
+									id = $div.attr("id"),
+									value = $input.val();
+								con.request({
+									"command" : "modified",
+									"data" : {
+										"id" : id,
+										"value" : value
+									}
+								});
+							});
 						}
 					}
 				});
 			});
 			con.sendNoop(30, !room.utils.isMobile());
-
-			$el.find(":input").change(function() {
-				var $input = $(this),
-					$div = $input.parent("div"),
-					id = $div.attr("id"),
-					value = $input.val();
-				con.request({
-					"command" : "modified",
-					"data" : {
-						"id" : id,
-						"value" : value
-					}
-				});
-			});
 			$.data($el.get(0), "connection", con);
 		}
 		function downloadExcel(template, data, options) {
@@ -8574,14 +8687,19 @@ if (typeof(flect) == "undefined") flect = {};
 				"type" : "POST",
 				"data" : data,
 				"success" : function(data, status, xhr) {
-					var ct = xhr.getResponseHeader("content-type") || "json";
+					var ct = xhr.getResponseHeader("content-type") || "json",
+						form = options.form,
+						live = options.live && WebSocket && room && room.Connection;
 					if (ct.indexOf("json") != -1) {
 						$el.excelToCanvas(data);
-						if (options.form) {
-							buildForm($el, options.buildInput);
-						}
-						if (options.live && WebSocket && room && room.Connection) {
-							buildLiveForm($el, template);
+						if (form) {
+							if (live) {
+								buildLiveForm($el, template, true, options.buildInput);
+							} else {
+								buildForm($el, null, options.buildInput);
+							}
+						} else if (live) {
+							buildLiveForm($el, template, false);
 						}
 						if (options.callback) {
 							options.callback($el, data);
