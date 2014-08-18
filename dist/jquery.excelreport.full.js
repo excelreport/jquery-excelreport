@@ -8566,7 +8566,7 @@ flect.ExcelReport = function(baseUrl, user) {
 						"width" : (w - 8) + "px",
 						"height" : (h - 2) + "px"
 					});
-					$input.addClass("cellInput");
+					$input.addClass("exrep-input");
 					$input.attr("name", name);
 				}
 				$div.append($input);

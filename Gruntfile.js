@@ -26,7 +26,7 @@ module.exports = function(grunt) {
                 },
                 {
                     expand: true,
-                    cwd: "bower_components/excel2canvas/dist",
+                    cwd: "src",
                     src: "*.css",
                     dest: "dist"
                 }]
@@ -61,6 +61,13 @@ module.exports = function(grunt) {
                 ],
                 dest: "dist/jquery.excelreport.js"
             },
+            css : {
+                src : [
+                    "bower_components/excel2canvas/dist/jquery.excel2canvas.css",
+                    "src/jquery.excelreport.css"
+                ],
+                dest: "dist/jquery.excelreport.full.css"
+            },
             full : {
                 src : [
                     "bower_components/flotr2/flotr2.js",
@@ -87,8 +94,18 @@ module.exports = function(grunt) {
                     "dist/jquery.excelreport.min.js": "dist/jquery.excelreport.js",
                     "dist/jquery.excelreport.full.min.js": "dist/jquery.excelreport.full.js",
                     "dist/jquery.excelreport.nochart.min.js": "dist/jquery.excelreport.nochart.js",
-                    "dist/i18n/jquery.excelreport.msg_ja.min.js": "dist/i18n/jquery.excelreport.msg_ja.js",
+                    "dist/i18n/jquery.excelreport.msg_ja.min.js": "dist/i18n/jquery.excelreport.msg_ja.js"
                 }]
+            }
+        },
+        cssmin: {
+            minify: {
+                expand: true,
+                cwd: 'dist',
+                src: ['*.css', '!*.min.css'],
+                dest: 'dist',
+                ext: '.min.css',
+                extDot: 'last'
             }
         },
 
@@ -101,14 +118,14 @@ module.exports = function(grunt) {
                 files: [
                     'src/*.js'
                 ],
-                tasks: ['jshint', 'concat:core', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify', "copy:app"]
+                tasks: ['jshint', 'concat:core', 'concat:css', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify', 'cssmin', "copy:app"]
             }
         }
     });
  
     loadDependencies(grunt.config("pkg").devDependencies);
 
-    grunt.registerTask('default', [ 'jshint', 'concat:core', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify']);
+    grunt.registerTask('default', [ 'jshint', 'concat:core', 'concat:css', 'copy:dist', 'concat:full', 'concat:nochart', 'uglify', 'cssmin']);
     grunt.registerTask('cp', [ 'copy:app']);
 
 };

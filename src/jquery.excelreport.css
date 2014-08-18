@@ -1,0 +1,17 @@
+input.exrep-input, textarea.exrep-input, select.exrep-input {
+	margin:1px 4px;
+	padding: 0 2px;
+	background: none;
+	border: none;
+	resize: none;
+	background-color: rgba(180,180,180,0.2);
+	border-radius: 3px;
+}
+
+.exrep-popup {
+
+}
+
+.exrep-error {
+
+}
