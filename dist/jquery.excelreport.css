@@ -38,6 +38,19 @@ input.exrep-input, textarea.exrep-input, select.exrep-input {
 	border-radius: 5px 5px 0 0;
 }
 
+.exrep-popup-title:after {
+    content: "";
+    clear: both;
+    height: 0;
+    display: block;
+    visibility: hidden;
+}
+
+.exrep-popup-close {
+	float:right;
+	cursor: pointer;
+}
+
 .exrep-popup-content {
 	padding: 2px 4px;
 }

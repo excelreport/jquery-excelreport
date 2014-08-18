@@ -86,18 +86,20 @@ function addAuthorization(params, apikey) {
 }
 
 function defaultOnRule(eventName, params) {
+	function closePrompt() {
+		popup.hide();
+		$input.unbind("blur change", closePrompt);
+	}
 	var popup = null,
 		$input = $(this);
 	switch (eventName) {
 		case "prompt":
 			popup = new Popup(params.title, params.text, false);
-			$input.blur(function() {
-				popup.hide();
-				$input.unbind("blur");
-			});
+			$input.blur(closePrompt);
 			break;
 		case "error":
 			popup = new Popup(params.title, params.text, true);
+			$input.change(closePrompt);
 			break;
 	}
 	if (popup) {
@@ -189,10 +191,13 @@ var $promptDiv = $("<div class='exrep-popup' style='display:none;'/>"),
 function Popup(title, text, error) {
 	function show($input) {
 		var $parent = $input.parent("div"),
-			offset = $parent.position();
+			offset = $parent.position(),
+			top = error ? offset.top + $parent.height() + 20 : offset.top - 60,
+			left = offset.left + 20;
+
 		$div.appendTo($parent.parent()).css({
-			"top" : offset.top - 60,
-			"left" : offset.left + 20
+			"top" : top,
+			"left" : left
 		}).show();
 	}
 	function hide() {
@@ -206,7 +211,13 @@ function Popup(title, text, error) {
 		$title = $("<div class='exrep-popup-title'/>");
 		$title.text(title);
 		$div.append($title);
+		if (error) {
+			$("<div class='exrep-popup-close'>×</div>")
+				.appendTo($title)
+				.click(hide);
+		}
 	}
+
 	$content.text(text);
 	$div.append($content);
 
@@ -556,12 +567,17 @@ flect.ExcelReport = function(baseUrl, user) {
 							var $input = $(this),
 								$div = $input.parent("div"),
 								id = $div.attr("id"),
+								name = $input.attr("name"),
 								value = $input.val();
 							con.request({
 								"command" : "modified",
 								"data" : {
 									"id" : id,
+									"name" : name,
 									"value" : value
+								},
+								"success" : function(data) {
+									defaults.onRule.call($input[0], "error", data);
 								}
 							});
 						});

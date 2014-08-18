@@ -146,12 +146,17 @@ flect.ExcelReport = function(baseUrl, user) {
 							var $input = $(this),
 								$div = $input.parent("div"),
 								id = $div.attr("id"),
+								name = $input.attr("name"),
 								value = $input.val();
 							con.request({
 								"command" : "modified",
 								"data" : {
 									"id" : id,
+									"name" : name,
 									"value" : value
+								},
+								"success" : function(data) {
+									defaults.onRule.call($input[0], "error", data);
 								}
 							});
 						});
