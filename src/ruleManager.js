@@ -12,7 +12,11 @@ function defaultOnRule(eventName, params) {
 			break;
 		case "error":
 			popup = new Popup(params.title, params.text, true);
+			$input.addClass("exrep-error");
 			$input.change(closePrompt);
+			break;
+		case "modified":
+			$input.removeClass("exrep-error");
 			break;
 	}
 	if (popup) {

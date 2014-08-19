@@ -1,5 +1,5 @@
 var $promptDiv = $("<div class='exrep-popup' style='display:none;'/>"),
-	$errorDiv = $("<div class='exrep-popup exrep-error' style='display:none;'/>");
+	$errorDiv = $("<div class='exrep-popup exrep-popup-error' style='display:none;'/>");
 function Popup(title, text, error) {
 	function show($input) {
 		var $parent = $input.parent("div"),

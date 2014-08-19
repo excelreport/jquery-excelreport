@@ -66,16 +66,6 @@
 	z-index: 2;
 }
 
-input.cellInput, textarea.cellInput, select.cellInput {
-	margin:1px 4px;
-	padding: 0 2px;
-	background: none;
-	border: none;
-	resize: none;
-	background-color: rgba(180,180,180,0.2);
-	border-radius: 3px;
-}
-
 input.exrep-input, textarea.exrep-input, select.exrep-input {
 	margin:1px 4px;
 	padding: 0 2px;
@@ -133,7 +123,12 @@ input.exrep-input, textarea.exrep-input, select.exrep-input {
 	padding: 2px 4px;
 }
 
-.exrep-error {
+.exrep-popup-error {
 	color: #a94442;
 	background-color: #f2dede;
+}
+
+.exrep-error {
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #FF0000;
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #FF0000;
 }

@@ -32,11 +32,9 @@ flect.ExcelReport = function(baseUrl, user) {
 				var $input = buildInput ? buildInput($div) : null,
 					h = $div.innerHeight(),
 					w = $div.innerWidth();
-console.log("test1: ", id, $input);
 				if ($input === null && ruleMan) {
 					$input = ruleMan.buildInput(name, id);
 				}
-console.log("test2: ", id, $input);
 				if ($input === null) {
 					if (h > 40) {
 						$input = $("<textarea></textarea>");
@@ -47,7 +45,6 @@ console.log("test2: ", id, $input);
 						} else if ($span.hasClass("cell-ac")) {
 							$input.css("text-align", "center");
 						} 
-console.log("test3: ", id, $span.attr("class"));
 					}
 				}
 				if (typeof($input) != "string") {
@@ -137,7 +134,7 @@ console.log("test3: ", id, $span.attr("class"));
 						alert(data.error);
 						con.close();
 						$.removeData($el.get(0), "connection");
-					} else {
+					} else if (form) {
 						if (data.license == "Free") {
 							insertLogo();
 						}
@@ -159,14 +156,28 @@ console.log("test3: ", id, $span.attr("class"));
 									"value" : value
 								},
 								"success" : function(data) {
-									defaults.onRule.call($input[0], "error", data);
+									if (data == "OK") {
+										defaults.onRule.call($input[0], "modified", value);
+									} else {
+										defaults.onRule.call($input[0], "error", data);
+									}
 								}
 							});
 						});
+					} else {
+						$el.excelReport("update", $el.excelReport("data"));
 					}
+					form = false;
 				}
 			});
 		});
+		if (defaults.debug) {
+			con.onRequest(function(command, data) {
+				console.log("request: ", command, data);
+			}).onMessage(function(data) {
+				console.log("receive: ", data.data);
+			});
+		}
 		con.sendNoop(30, !room.utils.isMobile());
 		$.data($el.get(0), "connection", con);
 	}

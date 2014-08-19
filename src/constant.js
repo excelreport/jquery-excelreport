@@ -22,6 +22,7 @@ var
 		"height" : 120,
 		"top" : "center",
 		"left" : "center",
+		"debug" : false,
 		"error" : function(msg) {
 			alert(msg);
 		},
