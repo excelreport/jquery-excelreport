@@ -1,14 +1,14 @@
 function defaultOnRule(eventName, params) {
 	function closePrompt() {
 		popup.hide();
-		$input.unbind("blur change", closePrompt);
+		$input.unbind("change", closePrompt);
 	}
 	var popup = null,
 		$input = $(this);
 	switch (eventName) {
 		case "prompt":
 			popup = new Popup(params.title, params.text, false);
-			$input.blur(closePrompt);
+			$input.change(closePrompt);
 			break;
 		case "error":
 			popup = new Popup(params.title, params.text, true);

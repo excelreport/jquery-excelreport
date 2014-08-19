@@ -8231,14 +8231,14 @@ function addAuthorization(params, apikey) {
 function defaultOnRule(eventName, params) {
 	function closePrompt() {
 		popup.hide();
-		$input.unbind("blur change", closePrompt);
+		$input.unbind("change", closePrompt);
 	}
 	var popup = null,
 		$input = $(this);
 	switch (eventName) {
 		case "prompt":
 			popup = new Popup(params.title, params.text, false);
-			$input.blur(closePrompt);
+			$input.change(closePrompt);
 			break;
 		case "error":
 			popup = new Popup(params.title, params.text, true);
@@ -8596,9 +8596,11 @@ flect.ExcelReport = function(baseUrl, user) {
 				var $input = buildInput ? buildInput($div) : null,
 					h = $div.innerHeight(),
 					w = $div.innerWidth();
+console.log("test1: ", id, $input);
 				if ($input === null && ruleMan) {
 					$input = ruleMan.buildInput(name, id);
 				}
+console.log("test2: ", id, $input);
 				if ($input === null) {
 					if (h > 40) {
 						$input = $("<textarea></textarea>");
@@ -8609,6 +8611,7 @@ flect.ExcelReport = function(baseUrl, user) {
 						} else if ($span.hasClass("cell-ac")) {
 							$input.css("text-align", "center");
 						} 
+console.log("test3: ", id, $span.attr("class"));
 					}
 				}
 				if (typeof($input) != "string") {

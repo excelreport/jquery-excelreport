@@ -23,12 +23,6 @@ module.exports = function(grunt) {
                     cwd: "src/i18n",
                     src: "*.js",
                     dest: "dist/i18n"
-                },
-                {
-                    expand: true,
-                    cwd: "src",
-                    src: "*.css",
-                    dest: "dist"
                 }]
             },
             app: {
@@ -60,7 +54,7 @@ module.exports = function(grunt) {
                     "src/jqueryImpl.js",
                     "src/outro.txt"
                 ],
-                dest: "dist/jquery.excelreport.js"
+                dest: "target/jquery.excelreport.js"
             },
             css : {
                 src : [
@@ -75,7 +69,7 @@ module.exports = function(grunt) {
                     "bower_components/roomframework/dist/roomframework.js",
                     "bower_components/excel2canvas/dist/jquery.excel2canvas.js",
                     "bower_components/excel2canvas/dist/jquery.excel2chart.flotr2.js",
-                    "dist/jquery.excelreport.js"
+                    "target/jquery.excelreport.js"
                 ],
                 dest: "dist/jquery.excelreport.full.js"
             },
@@ -83,7 +77,7 @@ module.exports = function(grunt) {
                 src : [
                     "bower_components/roomframework/dist/roomframework.js",
                     "bower_components/excel2canvas/dist/jquery.excel2canvas.js",
-                    "dist/jquery.excelreport.js"
+                    "target/jquery.excelreport.js"
                 ],
                 dest: "dist/jquery.excelreport.nochart.js"
             }
@@ -92,7 +86,6 @@ module.exports = function(grunt) {
         uglify: {
             build: {
                 files: [{
-                    "dist/jquery.excelreport.min.js": "dist/jquery.excelreport.js",
                     "dist/jquery.excelreport.full.min.js": "dist/jquery.excelreport.full.js",
                     "dist/jquery.excelreport.nochart.min.js": "dist/jquery.excelreport.nochart.js",
                     "dist/i18n/jquery.excelreport.msg_ja.min.js": "dist/i18n/jquery.excelreport.msg_ja.js"
