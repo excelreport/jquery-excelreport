@@ -85,6 +85,7 @@ flect.ExcelReport = function(baseUrl, user) {
 				"bottom" : 0,
 				"z-index" : 1000
 			});
+			$img.addClass("exrep-logo");
 			$el.append($img);
 		}
 		function buildUrl() {

@@ -4,9 +4,15 @@ function Popup(title, text, error) {
 	function show($input) {
 		var $parent = $input.parent("div"),
 			offset = $parent.position(),
-			top = error ? offset.top + $parent.height() + 20 : offset.top - 60,
+			top = offset.top,
 			left = offset.left + 20;
-
+		if (error) {
+			top += $input.height() + 10;
+		} else if (title) {
+			top -= 60;
+		} else {
+			top -= 35;
+		}
 		$div.appendTo($parent.parent()).css({
 			"top" : top,
 			"left" : left

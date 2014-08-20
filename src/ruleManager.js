@@ -1,14 +1,14 @@
 function defaultOnRule(eventName, params) {
 	function closePrompt() {
 		popup.hide();
-		$input.unbind("change", closePrompt);
+		$input.unbind("change blur", closePrompt);
 	}
 	var popup = null,
 		$input = $(this);
 	switch (eventName) {
 		case "prompt":
 			popup = new Popup(params.title, params.text, false);
-			$input.change(closePrompt);
+			$input.bind("change blur", closePrompt);
 			break;
 		case "error":
 			popup = new Popup(params.title, params.text, true);
@@ -67,8 +67,12 @@ function RuleManager(rules) {
 		return ret;
 	}
 	function buildInput(name, id) {
-		var rule = getRule(name, id);
-		if (rule && rule.vt === VT_LIST) {
+		var rule = getRule(name, id),
+			$input = null;
+		if (!rule) {
+			return null;
+		}
+		if (rule.vt === VT_LIST) {
 			var $sel = $("<select><option value=''></option></select>");
 			$.each(rule.list, function(idx, value) {
 				var $op = $("<option/>");
@@ -78,8 +82,18 @@ function RuleManager(rules) {
 			});
 			return $sel;
 		}
-		if (rule && isNumberRule(rule)) {
-			var $input = $("<input type='text'/>");
+		if (isNumberRule(rule)) {
+			$input = $("<input type='number'/>");
+			$input.css("text-align", "right");
+			return $input;
+		}
+		if (rule.vt === VT_DATE) {
+			$input = $("<input type='date'/>");
+			$input.css("text-align", "right");
+			return $input;
+		}
+		if (rule.vt === VT_TIME) {
+			$input = $("<input type='time'/>");
 			$input.css("text-align", "right");
 			return $input;
 		}
