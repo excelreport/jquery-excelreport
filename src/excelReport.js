@@ -196,23 +196,6 @@ flect.ExcelReport = function(baseUrl, user) {
 		var processor = new Processor(user, template, options);
 		processor.prepare(data);
 	}
-	function uploadExcel(formData, options, callback) {
-		switch (arguments.length) {
-			case 0: 
-				throw new Exception("upload file is required.");
-			case 1:
-				break;
-			case 2:
-				if ($.isFunction(arguments[1])) {
-					callback = options;
-					options = null;
-				}
-				break;
-		}
-		options = createOptions(options, "upload");
-		var processor = new Processor("", "", options);
-		processor.prepare(formData, callback);
-	}
 	function report($el, template, data, options) {
 		var params = {
 			"url" : baseUrl + "/report/json/" + user + "/" + template,

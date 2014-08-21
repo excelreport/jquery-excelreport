@@ -1,14 +1,3 @@
-$.fn.uploadExcel = function(options, callback) {
-	if (arguments.length == 1) {
-		callback = options;
-		options = null;
-	}
-	options = options || {};
-	options.contextUrl = "upload";
-	var processor = new Processor("", "", options),
-		formData = new FormData($(this)[0]);
-	processor.prepare(formData, callback);
-};
 $.fn.excelReport = function(method, params, param2) {
 	//Private
 	function normalizeData($el, data) {

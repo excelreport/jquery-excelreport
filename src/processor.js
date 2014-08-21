@@ -67,15 +67,12 @@ function Processor(user, template, options) {
 		dialog = new ProcessingDialog($el, options);
 		dialog.cancelButton.click(cancel);
 	}
-	function isUpload() {
-		return options.contextUrl == "upload";
-	}
 	function prepare(data, func) {
 		ticket = null;
 		canceled = false;
 		callback = func;
 		var params = {
-			"url" : makeUrl(options, "/prepare"),
+			"url" : makeUrl(options, "/prepare/" + user + "/" + template),
 			"type" : "POST",
 			"data" : data,
 			"success" : function(data) {
@@ -98,9 +95,6 @@ function Processor(user, template, options) {
 				options.error(status + ", " + e);
 			}
 		};
-		if (!isUpload()) {
-			 params.url += "/" + user + "/" + template;
-		}
 		if (options.apikey) {
 			addAuthorization(params, options.apikey);
 		}

@@ -8463,15 +8463,12 @@ function Processor(user, template, options) {
 		dialog = new ProcessingDialog($el, options);
 		dialog.cancelButton.click(cancel);
 	}
-	function isUpload() {
-		return options.contextUrl == "upload";
-	}
 	function prepare(data, func) {
 		ticket = null;
 		canceled = false;
 		callback = func;
 		var params = {
-			"url" : makeUrl(options, "/prepare"),
+			"url" : makeUrl(options, "/prepare/" + user + "/" + template),
 			"type" : "POST",
 			"data" : data,
 			"success" : function(data) {
@@ -8494,9 +8491,6 @@ function Processor(user, template, options) {
 				options.error(status + ", " + e);
 			}
 		};
-		if (!isUpload()) {
-			 params.url += "/" + user + "/" + template;
-		}
 		if (options.apikey) {
 			addAuthorization(params, options.apikey);
 		}
@@ -8785,23 +8779,6 @@ flect.ExcelReport = function(baseUrl, user) {
 		var processor = new Processor(user, template, options);
 		processor.prepare(data);
 	}
-	function uploadExcel(formData, options, callback) {
-		switch (arguments.length) {
-			case 0: 
-				throw new Exception("upload file is required.");
-			case 1:
-				break;
-			case 2:
-				if ($.isFunction(arguments[1])) {
-					callback = options;
-					options = null;
-				}
-				break;
-		}
-		options = createOptions(options, "upload");
-		var processor = new Processor("", "", options);
-		processor.prepare(formData, callback);
-	}
 	function report($el, template, data, options) {
 		var params = {
 			"url" : baseUrl + "/report/json/" + user + "/" + template,
@@ -8862,17 +8839,6 @@ flect.ExcelReport = function(baseUrl, user) {
 	});
 };
 
-$.fn.uploadExcel = function(options, callback) {
-	if (arguments.length == 1) {
-		callback = options;
-		options = null;
-	}
-	options = options || {};
-	options.contextUrl = "upload";
-	var processor = new Processor("", "", options),
-		formData = new FormData($(this)[0]);
-	processor.prepare(formData, callback);
-};
 $.fn.excelReport = function(method, params, param2) {
 	//Private
 	function normalizeData($el, data) {
