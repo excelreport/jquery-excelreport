@@ -8618,7 +8618,7 @@ flect.ExcelReport = function(baseUrl, user) {
 				text = $span.text(),
 				isFormula = !!$div.attr("data-formula");
 			if (!isFormula) {
-				var $input = buildInput ? buildInput($div) : null,
+				var $input = buildInput ? buildInput(name, id) : null,
 					h = $div.innerHeight(),
 					w = $div.innerWidth();
 				if ($input === null && ruleMan) {
@@ -8678,7 +8678,8 @@ flect.ExcelReport = function(baseUrl, user) {
 			$el.append($img);
 		}
 		function buildUrl() {
-			var url = "";
+			var url = "",
+				lang = defaults.lang || $("html").attr("lang") || "";
 			if (!baseUrl) {
 				url = (location.protocol == "https:" ? "wss" : "ws") + "://" + location.host;
 			} else if (baseUrl.indexOf("https:") === 0) {
@@ -8690,7 +8691,11 @@ flect.ExcelReport = function(baseUrl, user) {
 			} else {
 				defaults.error("Invalid baseUrl: " + baseUrl);
 			}
-			return url + "/liveform/" + user + "/" + template;
+			url += "/liveform/" + user + "/" + template;
+			if (lang) {
+				url += "?language=" + lang;
+			}
+			return url;
 		}
 		var url = buildUrl(),
 			con = new room.Connection({
