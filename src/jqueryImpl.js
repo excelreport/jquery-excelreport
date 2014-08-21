@@ -34,17 +34,28 @@ $.fn.excelReport = function(method, params, param2) {
 		var baseUrl = params.baseUrl || defaults.baseUrl,
 			user = params.user,
 			template = params.template,
-			sheet = sheet,
-			data = params.data,
-			callback = params.callback,
-			position = $el.css("position");
-		if (sheet) {
-			template = template + "/" + sheet;
-		}
+			sheet = params.sheet,
+			data = params.data;
+			position = $el.css("position"),
+			report = $.data(el.get(0), "report"),
+			options = {
+				"apikey" : params.apikey,
+				"form" : params.form,
+				"live" : params.live,
+				"cache" : params.cache,
+				"callback" : params.callback,
+				"buildInput" : params.buildInput
+			};
 		if (position === "static") {
 			$el.css("position", "relative");
 		}
-		new flect.ExcelReport(baseUrl, user).report($el, template, data, params);
+		if (report) {
+			report.release();
+			$.removeData($el.get(0), "report");
+		}
+		var report = new flect.ExcelReport($el, baseUrl, user, template, sheet, options)
+		report.show(data);
+		$.data($el.get(0), "report", report);
 	}
 	function data($el, includeEmptyValue) {
 		var ret = {};

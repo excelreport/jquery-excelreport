@@ -112,6 +112,7 @@ function RuleManager(rules) {
 		}
 	}
 	$.extend(this, {
+		"rules" : rules,
 		"buildInput" : buildInput,
 		"onFocus" : onFocus
 	});
