@@ -7399,6 +7399,9 @@ $(function() {
 					}
 				}, retryCount * settings.retryInterval);
 				retryCount++;
+			} else if (sendNoopHandle) {
+				clearInterval(sendNoopHandle);
+				sendNoopHandle = 0;
 			}
 		}
 		function onError(event) {
@@ -7439,13 +7442,17 @@ $(function() {
 			return socket;
 		}
 		function sendNoop(interval, sendIfHidden, commandName) {
-			return setInterval(function() {
+			if (sendNoopHandle) {
+				clearInterval(sendNoopHandle);
+			}
+			sendNoopHandle = setInterval(function() {
 				if (isConnected() && (sendIfHidden || isDocumentVisible())) {
 					request({
 						"command" : commandName || "noop"
 					});
 				}
 			}, interval * 1000);
+			return sendNoopHandle;
 		}
 		if (typeof(settings) === "string") {
 			settings = {
@@ -7462,6 +7469,7 @@ $(function() {
 			readyFuncs = [],
 			openning = false,
 			retryCount = 0,
+			sendNoopHandle = 0,
 			socket = createWebSocket();
 		$(window).on("beforeunload", close);
 		$(document).on(visibilityChangeProp, function() {
@@ -8220,6 +8228,11 @@ function isFormData(data) {
 function isNumeric(str) {
 	return $.isNumeric(str.replace(/,/g, ""));
 }
+function debug() {
+	if (defaults.debug) {
+		console.log.apply(console, arguments);
+	}
+}
 function makeUrl(options, path) {
 	return options.baseUrl + "/" + options.contextUrl + path;
 }
@@ -8343,6 +8356,7 @@ function RuleManager(rules) {
 		}
 	}
 	$.extend(this, {
+		"rules" : rules,
 		"buildInput" : buildInput,
 		"onFocus" : onFocus
 	});
@@ -8581,20 +8595,21 @@ function Processor(user, template, options) {
 	});
 }
 
-flect.ExcelReport = function(baseUrl, user) {
+flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
+	function getCacheKey() {
+		var ret = "excelreport-" + user + "-" + template;
+		if (sheet) {
+			ret += "-" + sheet;
+		}
+		return ret;
+	}
 	function isMultiNamedCell($div) {
 		var name = $div.attr("data-name"),
 			$prev = $div.prev("div:eq(0)"),
 			$next = $div.next("div:eq(0)");
 		return $prev.attr("data-name") == name || $next.attr("data-name") == name;
 	}
-	function createOptions(options, context) {
-		var ret = options || {};
-		ret.baseUrl = baseUrl;
-		ret.contextUrl = context;
-		return ret;
-	}
-	function buildForm($el, ruleMan, buildInput) {
+	function buildForm() {
 		function getRealWidth($span) {
 			var $temp = $("<span style='display:none;'/>"),
 				ret = 0;
@@ -8604,6 +8619,7 @@ flect.ExcelReport = function(baseUrl, user) {
 			$temp.remove();
 			return ret;
 		}
+		debug("ExcelReport.buildForm");
 		$el.find(".namedCell").each(function() {
 			var $div = $(this),
 				$span = $div.find("span"),
@@ -8612,7 +8628,7 @@ flect.ExcelReport = function(baseUrl, user) {
 				text = $span.text(),
 				isFormula = !!$div.attr("data-formula");
 			if (!isFormula) {
-				var $input = buildInput ? buildInput(name, id) : null,
+				var $input = options.buildInput ? options.buildInput(name, id) : null,
 					h = $div.innerHeight(),
 					w = $div.innerWidth();
 				if ($input === null && ruleMan) {
@@ -8657,20 +8673,33 @@ flect.ExcelReport = function(baseUrl, user) {
 				$div.append($input);
 			}
 		});
-	}
-	function buildLiveForm($el, template, form, buildInput) {
-		function insertLogo() {
-			var $img = $("<img/>");
-			$img.attr("src", baseUrl + "/assets/images/PoweredByExcelReport.png");
-			$img.css({
-				"position" : "absolute",
-				"right" : 0,
-				"bottom" : 0,
-				"z-index" : 1000
+		if (con) {
+			$el.find(":input").change(function() {
+				var $input = $(this),
+					$div = $input.parent("div"),
+					id = $div.attr("id"),
+					name = $input.attr("name"),
+					value = $input.val();
+				con.request({
+					"command" : "modified",
+					"data" : {
+						"id" : id,
+						"name" : name,
+						"value" : value
+					},
+					"success" : function(data) {
+						if (data == "OK") {
+							defaults.onRule.call($input[0], "modified", value);
+						} else {
+							defaults.onRule.call($input[0], "error", data);
+						}
+					}
+				});
 			});
-			$img.addClass("exrep-logo");
-			$el.append($img);
 		}
+		finish();
+	}
+	function openConnection() {
 		function buildUrl() {
 			var url = "",
 				lang = defaults.lang || $("html").attr("lang") || "";
@@ -8691,10 +8720,15 @@ flect.ExcelReport = function(baseUrl, user) {
 			}
 			return url;
 		}
-		var url = buildUrl(),
-			con = new room.Connection({
-				"url" : url
-			});
+		debug("ExcelReport.openConnection");
+		var params = {
+				"url": buildUrl()
+			},
+			first = con === null;
+		if (defaults.debug) {
+			params.logger = console;
+		}
+		con = new room.Connection(params);
 		con.on("calced", function(data) {
 			$.each(data, function(key, value) {
 				var $span = $("#" + key + " span");
@@ -8713,129 +8747,165 @@ flect.ExcelReport = function(baseUrl, user) {
 			}
 		});
 		con.onOpen(function(event) {
-			con.request({
-				"command" : "available",
-				"data" : {
-					"rules" : form
-				},
-				"success" : function(data) {
-					if (data.error) {
-						alert(data.error);
-						con.close();
-						$.removeData($el.get(0), "connection");
-					} else if (form) {
-						if (data.license == "Free") {
-							insertLogo();
+			if (first) {
+				con.request({
+					"command" : "available",
+					"data" : {
+						"rules" : ruleMan === null
+					},
+					"success" : function(data) {
+						if (data.error) {
+							alert(data.error);
+							con.close();
+							con = null;
+						} else {
+							license = data.license;
+							if (!ruleMan) {
+								ruleMan = new RuleManager(data.rules);
+							}
+							if (options.form) {
+								buildForm();
+							}
 						}
-						if (form) {
-							var ruleMan = new RuleManager(data.rules);
-							buildForm($el, ruleMan, buildInput);
-						}
-						$el.find(":input").change(function() {
-							var $input = $(this),
-								$div = $input.parent("div"),
-								id = $div.attr("id"),
-								name = $input.attr("name"),
-								value = $input.val();
-							con.request({
-								"command" : "modified",
-								"data" : {
-									"id" : id,
-									"name" : name,
-									"value" : value
-								},
-								"success" : function(data) {
-									if (data == "OK") {
-										defaults.onRule.call($input[0], "modified", value);
-									} else {
-										defaults.onRule.call($input[0], "error", data);
-									}
-								}
-							});
-						});
-					} else {
-						$el.excelReport("update", $el.excelReport("data"));
 					}
-					form = false;
-				}
-			});
+				});
+			} else {
+				$el.excelReport("update", $el.excelReport("data"));
+			}
 		});
-		if (defaults.debug) {
-			con.onRequest(function(command, data) {
-				console.log("request: ", command, data);
-			}).onMessage(function(data) {
-				console.log("receive: ", data.data);
-			});
-		}
 		con.sendNoop(30, !room.utils.isMobile());
-		$.data($el.get(0), "connection", con);
 	}
-	function downloadExcel(template, data, options) {
-		var processor = new Processor(user, template, createOptions(options, "download"));
-		processor.prepare(data);
+	function getInfo(callback) {
+		debug("ExcelReport.getInfo");
+		$.ajax({
+			"url" : baseUrl + "/report/info/" + user + "/" + template,
+			"success" : callback
+		});
 	}
-	function downloadPdf(template, data, options) {
-		options = createOptions(options, "pdf");
-		var processor = new Processor(user, template, options);
-		processor.prepare(data);
+	function show(data) {
+		debug("ExcelReport.show");
+		var hasData = data && !$.isEmptyObject(data);
+		if (options.cache && !hasData) {
+			var cachedObj = storage.getAsJson(getCacheKey());
+			if (cachedObj) {
+				getInfo(function(info) {
+					lastModified = info.lastModified;
+					if (info.lastModified == cachedObj.lastModified) {
+						if (cachedObj.rules) {
+							ruleMan = new RuleManager(cachedObj.rules);
+						}
+						if (cachedObj.json) {
+							json = cachedObj.json;
+							showJson(json);
+							return;
+						}
+					}
+					loadJson(data, hasData);
+				});
+				return;
+			}
+		}
+		loadJson(data, hasData);
 	}
-	function report($el, template, data, options) {
+	function loadJson(data, hasData) {
+		debug("ExcelReport.loadJson");
 		var params = {
 			"url" : baseUrl + "/report/json/" + user + "/" + template,
 			"type" : "POST",
 			"data" : data,
 			"success" : function(data, status, xhr) {
-				var ct = xhr.getResponseHeader("content-type") || "json",
-					form = options.form,
-					live = options.live && WebSocket && room && room.Connection;
+				var ct = xhr.getResponseHeader("content-type") || "json";
 				if (ct.indexOf("json") != -1) {
-					$el.excelToCanvas(data);
-					if (form) {
-						if (live) {
-							buildLiveForm($el, template, true, options.buildInput);
-						} else {
-							buildForm($el, null, options.buildInput);
-						}
-					} else if (live) {
-						buildLiveForm($el, template, false);
+					if (!hasData) {
+						json = data;
 					}
-					if (options.callback) {
-						options.callback($el, data);
-					}
+					showJson(data);
 				} else if (ct.indexOf("html") != -1) {
 					$el.html(data);
 				}
-			} 
-		}, con = $.data($el.get(0), "connection");
-		if (con) {
-			con.close();
-			$.removeData($el.get(0), "connection");
+			}
+		};
+		if (sheet) {
+			params.url += "/" + sheet;
 		}
 		if (isFormData(data)) {
 			params.processData = false;
 			params.contentType = false;
 		}
-		if (options.apikey) {
+		if (apikey) {
 			addAuthorization(params, options.apikey);
 		}
 		$.ajax(params);
 	}
-	switch (arguments.length) {
-		case 0: 
-			alert("user is required.");
-			break;
-		case 1:
-			user = baseUrl;
-			baseUrl = defaults.baseUrl;
-			break;
-		case 2:
-			break;
+	function showJson(data) {
+		debug("ExcelReport.showJson");
+		$el.excelToCanvas(data);
+		if (options.live) {
+			openConnection();
+		} else if (options.form) {
+			buildForm();
+		} else {
+			finish();
+		}
 	}
+	function finish() {
+		debug("ExcelReport.finish");
+		if (license == "Free") {
+			var $img = $("<img/>");
+			$img.attr("src", baseUrl + "/assets/images/PoweredByExcelReport.png");
+			$img.css({
+				"position" : "absolute",
+				"right" : 0,
+				"bottom" : 0,
+				"z-index" : 1000
+			});
+			$img.addClass("exrep-logo");
+			$el.append($img);
+		}
+		if (options.callback) {
+			options.callback($el, data);
+		}
+		if (options.cache && (json || ruleMan)) {
+			var obj = {};
+			if (json) {
+				obj.json = json;
+			}
+			if (ruleMan) {
+				obj.rules = ruleMan.rules;
+			}
+			if (lastModified) {
+				obj.lastModified = lastModified;
+				storage.put(getCacheKey(), obj);
+			} else {
+				getInfo(function(info) {
+					obj.lastModified = info.lastModified;
+					storage.put(getCacheKey(), obj);
+				});
+			}
+		}
+	}
+	function release() {
+		debug("ExcelReport.release");
+		if (con) {
+			con.close();
+		}
+		storage = null;
+		lastModified = null;
+		con = null;
+		license = null;
+		json = null;
+		ruleMan = null;
+	}
+	debug("ExcelReport.init", user, template, sheet);
+	var storage = new room.Cache(localStorage),
+		lastModified = null,
+		con = null,
+		license = null,
+		json = null,
+		ruleMan = null;
 	$.extend(this, {
-		"downloadExcel" : downloadExcel,
-		"downloadPdf" : downloadPdf,
-		"uploadExcel" : uploadExcel,
-		"report" : report
+		"show" : show,
+		"release" : release
 	});
 };
 
@@ -8875,17 +8945,28 @@ $.fn.excelReport = function(method, params, param2) {
 		var baseUrl = params.baseUrl || defaults.baseUrl,
 			user = params.user,
 			template = params.template,
-			sheet = sheet,
+			sheet = params.sheet,
 			data = params.data,
-			callback = params.callback,
-			position = $el.css("position");
-		if (sheet) {
-			template = template + "/" + sheet;
-		}
+			position = $el.css("position"),
+			report = $.data($el.get(0), "report"),
+			options = {
+				"apikey" : params.apikey,
+				"form" : params.form,
+				"live" : params.live,
+				"cache" : params.cache,
+				"callback" : params.callback,
+				"buildInput" : params.buildInput
+			};
 		if (position === "static") {
 			$el.css("position", "relative");
 		}
-		new flect.ExcelReport(baseUrl, user).report($el, template, data, params);
+		if (report) {
+			report.release();
+			$.removeData($el.get(0), "report");
+		}
+		report = new flect.ExcelReport($el, baseUrl, user, template, sheet, options);
+		report.show(data);
+		$.data($el.get(0), "report", report);
 	}
 	function data($el, includeEmptyValue) {
 		var ret = {};

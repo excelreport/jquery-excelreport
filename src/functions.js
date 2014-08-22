@@ -11,6 +11,11 @@ function isFormData(data) {
 function isNumeric(str) {
 	return $.isNumeric(str.replace(/,/g, ""));
 }
+function debug() {
+	if (defaults.debug) {
+		console.log.apply(console, arguments);
+	}
+}
 function makeUrl(options, path) {
 	return options.baseUrl + "/" + options.contextUrl + path;
 }

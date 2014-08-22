@@ -22,6 +22,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			$temp.remove();
 			return ret;
 		}
+		debug("ExcelReport.buildForm");
 		$el.find(".namedCell").each(function() {
 			var $div = $(this),
 				$span = $div.find("span"),
@@ -122,10 +123,11 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			}
 			return url;
 		}
+		debug("ExcelReport.openConnection");
 		var params = {
 				"url": buildUrl()
 			},
-			first = con == null;
+			first = con === null;
 		if (defaults.debug) {
 			params.logger = console;
 		}
@@ -152,7 +154,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 				con.request({
 					"command" : "available",
 					"data" : {
-						"rules" : ruleMan == null
+						"rules" : ruleMan === null
 					},
 					"success" : function(data) {
 						if (data.error) {
@@ -161,7 +163,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 							con = null;
 						} else {
 							license = data.license;
-							if (ruleMan == null) {
+							if (!ruleMan) {
 								ruleMan = new RuleManager(data.rules);
 							}
 							if (options.form) {
@@ -177,32 +179,31 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		con.sendNoop(30, !room.utils.isMobile());
 	}
 	function getInfo(callback) {
+		debug("ExcelReport.getInfo");
 		$.ajax({
-			"url" : baseUrl + "/report/info" + user + "/" + template,
+			"url" : baseUrl + "/report/info/" + user + "/" + template,
 			"success" : callback
 		});
 	}
 	function show(data) {
+		debug("ExcelReport.show");
 		var hasData = data && !$.isEmptyObject(data);
 		if (options.cache && !hasData) {
 			var cachedObj = storage.getAsJson(getCacheKey());
 			if (cachedObj) {
 				getInfo(function(info) {
-					"url" : baseUrl + "/report/info" + user + "/" + template,
-					"success" : function(info) {
-						if (info.lastModified == cachedObject.lastModified) {
-							lastModified = info.lastModified;
-							if (cachedObj.rules) {
-								ruleMan = new RuleManager(info.rules);
-							}
-							if (cachedObj.json) {
-								json = cachedObj.json;
-								showJson(json);
-								return;
-							}
+					lastModified = info.lastModified;
+					if (info.lastModified == cachedObj.lastModified) {
+						if (cachedObj.rules) {
+							ruleMan = new RuleManager(cachedObj.rules);
 						}
-						loadJson(data, hasData);
+						if (cachedObj.json) {
+							json = cachedObj.json;
+							showJson(json);
+							return;
+						}
 					}
+					loadJson(data, hasData);
 				});
 				return;
 			}
@@ -210,6 +211,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		loadJson(data, hasData);
 	}
 	function loadJson(data, hasData) {
+		debug("ExcelReport.loadJson");
 		var params = {
 			"url" : baseUrl + "/report/json/" + user + "/" + template,
 			"type" : "POST",
@@ -239,6 +241,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		$.ajax(params);
 	}
 	function showJson(data) {
+		debug("ExcelReport.showJson");
 		$el.excelToCanvas(data);
 		if (options.live) {
 			openConnection();
@@ -249,6 +252,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		}
 	}
 	function finish() {
+		debug("ExcelReport.finish");
 		if (license == "Free") {
 			var $img = $("<img/>");
 			$img.attr("src", baseUrl + "/assets/images/PoweredByExcelReport.png");
@@ -279,11 +283,12 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 				getInfo(function(info) {
 					obj.lastModified = info.lastModified;
 					storage.put(getCacheKey(), obj);
-				})
+				});
 			}
 		}
 	}
 	function release() {
+		debug("ExcelReport.release");
 		if (con) {
 			con.close();
 		}
@@ -294,6 +299,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		json = null;
 		ruleMan = null;
 	}
+	debug("ExcelReport.init", user, template, sheet);
 	var storage = new room.Cache(localStorage),
 		lastModified = null,
 		con = null,

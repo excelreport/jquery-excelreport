@@ -35,9 +35,9 @@ $.fn.excelReport = function(method, params, param2) {
 			user = params.user,
 			template = params.template,
 			sheet = params.sheet,
-			data = params.data;
+			data = params.data,
 			position = $el.css("position"),
-			report = $.data(el.get(0), "report"),
+			report = $.data($el.get(0), "report"),
 			options = {
 				"apikey" : params.apikey,
 				"form" : params.form,
@@ -53,7 +53,7 @@ $.fn.excelReport = function(method, params, param2) {
 			report.release();
 			$.removeData($el.get(0), "report");
 		}
-		var report = new flect.ExcelReport($el, baseUrl, user, template, sheet, options)
+		report = new flect.ExcelReport($el, baseUrl, user, template, sheet, options);
 		report.show(data);
 		$.data($el.get(0), "report", report);
 	}
