@@ -8832,7 +8832,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			params.processData = false;
 			params.contentType = false;
 		}
-		if (apikey) {
+		if (options.apikey) {
 			addAuthorization(params, options.apikey);
 		}
 		$.ajax(params);
@@ -8863,7 +8863,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			$el.append($img);
 		}
 		if (options.callback) {
-			options.callback($el, data);
+			options.callback($el);
 		}
 		if (options.cache && (json || ruleMan)) {
 			var obj = {};
