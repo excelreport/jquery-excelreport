@@ -265,8 +265,8 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			$img.addClass("exrep-logo");
 			$el.append($img);
 		}
-		if (options.callback) {
-			options.callback($el);
+		if (options.complete) {
+			options.complete($el);
 		}
 		if (options.cache && (json || ruleMan)) {
 			var obj = {};

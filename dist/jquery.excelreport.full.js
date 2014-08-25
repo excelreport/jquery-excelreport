@@ -7399,9 +7399,6 @@ $(function() {
 					}
 				}, retryCount * settings.retryInterval);
 				retryCount++;
-			} else if (sendNoopHandle) {
-				clearInterval(sendNoopHandle);
-				sendNoopHandle = 0;
 			}
 		}
 		function onError(event) {
@@ -7442,17 +7439,13 @@ $(function() {
 			return socket;
 		}
 		function sendNoop(interval, sendIfHidden, commandName) {
-			if (sendNoopHandle) {
-				clearInterval(sendNoopHandle);
-			}
-			sendNoopHandle = setInterval(function() {
+			return setInterval(function() {
 				if (isConnected() && (sendIfHidden || isDocumentVisible())) {
 					request({
 						"command" : commandName || "noop"
 					});
 				}
 			}, interval * 1000);
-			return sendNoopHandle;
 		}
 		if (typeof(settings) === "string") {
 			settings = {
@@ -7469,7 +7462,6 @@ $(function() {
 			readyFuncs = [],
 			openning = false,
 			retryCount = 0,
-			sendNoopHandle = 0,
 			socket = createWebSocket();
 		$(window).on("beforeunload", close);
 		$(document).on(visibilityChangeProp, function() {
@@ -8862,8 +8854,8 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			$img.addClass("exrep-logo");
 			$el.append($img);
 		}
-		if (options.callback) {
-			options.callback($el);
+		if (options.complete) {
+			options.complete($el);
 		}
 		if (options.cache && (json || ruleMan)) {
 			var obj = {};
@@ -8954,7 +8946,7 @@ $.fn.excelReport = function(method, params, param2) {
 				"form" : params.form,
 				"live" : params.live,
 				"cache" : params.cache,
-				"callback" : params.callback,
+				"complete" : params.complete,
 				"buildInput" : params.buildInput
 			};
 		if (position === "static") {

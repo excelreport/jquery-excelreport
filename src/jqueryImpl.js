@@ -43,7 +43,7 @@ $.fn.excelReport = function(method, params, param2) {
 				"form" : params.form,
 				"live" : params.live,
 				"cache" : params.cache,
-				"callback" : params.callback,
+				"complete" : params.complete,
 				"buildInput" : params.buildInput
 			};
 		if (position === "static") {
