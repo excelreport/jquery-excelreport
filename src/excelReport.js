@@ -173,8 +173,10 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 						}
 					}
 				});
+				first = false;
 			} else {
-				$el.excelReport("update", $el.excelReport("data"));
+				var values = $el.excelReport("data");
+				$el.excelReport("update", values);
 			}
 		});
 		con.sendNoop(30, !room.utils.isMobile());
@@ -300,6 +302,11 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		json = null;
 		ruleMan = null;
 	}
+	function request(params) {
+		if (con) {
+			con.request(params);
+		}
+	}
 	debug("ExcelReport.init", user, template, sheet);
 	var storage = new room.Cache(localStorage),
 		lastModified = null,
@@ -309,6 +316,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		ruleMan = null;
 	$.extend(this, {
 		"show" : show,
+		"request" : request,
 		"release" : release
 	});
 };

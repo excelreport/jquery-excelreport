@@ -103,7 +103,7 @@ $.fn.excelReport = function(method, params, param2) {
 	}
 	function updateCells($el, p1, p2) {
 		var params = p1,
-			con = $.data($el.get(0), "connection");
+			report = $.data($el.get(0), "report");
 		if (typeof(p1) === "string" && typeof(p2) !== "undefined") {
 			params = {};
 			params[p1] = p2;
@@ -124,8 +124,8 @@ $.fn.excelReport = function(method, params, param2) {
 				}
 			}
 		});
-		if (con) {
-			con.request({
+		if (report) {
+			report.request({
 				"command" : "updateCells",
 				"data" : params
 			});

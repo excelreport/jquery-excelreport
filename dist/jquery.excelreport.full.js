@@ -8677,6 +8677,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		finish();
 	}
 	function openConnection() {
+console.log("openConnection: ");
 		function buildUrl() {
 			var url = "",
 				lang = defaults.lang || $("html").attr("lang") || "";
@@ -8725,6 +8726,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			}
 		});
 		con.onOpen(function(event) {
+console.log("onOpen: " + first);
 			if (first) {
 				con.request({
 					"command" : "available",
@@ -8747,8 +8749,11 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 						}
 					}
 				});
+				first = false;
 			} else {
-				$el.excelReport("update", $el.excelReport("data"));
+				var values = $el.excelReport("data");
+console.log("reconnect: ", values);
+				$el.excelReport("update", values);
 			}
 		});
 		con.sendNoop(30, !room.utils.isMobile());
@@ -8863,7 +8868,6 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		}
 	}
 	function release() {
-console.log("release-----------------------------------");
 		debug("ExcelReport.release");
 		if (con) {
 			con.close();
@@ -8875,6 +8879,11 @@ console.log("release-----------------------------------");
 		json = null;
 		ruleMan = null;
 	}
+	function request(params) {
+		if (con) {
+			con.request(params);
+		}
+	}
 	debug("ExcelReport.init", user, template, sheet);
 	var storage = new room.Cache(localStorage),
 		lastModified = null,
@@ -8884,6 +8893,7 @@ console.log("release-----------------------------------");
 		ruleMan = null;
 	$.extend(this, {
 		"show" : show,
+		"request" : request,
 		"release" : release
 	});
 };
@@ -8955,7 +8965,6 @@ $.fn.excelReport = function(method, params, param2) {
 				value = $input.val(),
 				prev = ret[name],
 				type = typeof(prev);
-console.log("type: " + type);
 			if (type === "undefined") {
 				ret[name] = value;
 			} else if (type === "string") {
@@ -8994,7 +9003,7 @@ console.log("type: " + type);
 	}
 	function updateCells($el, p1, p2) {
 		var params = p1,
-			con = $.data($el.get(0), "connection");
+			report = $.data($el.get(0), "report");
 		if (typeof(p1) === "string" && typeof(p2) !== "undefined") {
 			params = {};
 			params[p1] = p2;
@@ -9015,8 +9024,8 @@ console.log("type: " + type);
 				}
 			}
 		});
-		if (con) {
-			con.request({
+		if (report) {
+			report.request({
 				"command" : "updateCells",
 				"data" : params
 			});
