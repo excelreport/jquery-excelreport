@@ -132,6 +132,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			params.logger = console;
 		}
 		con = new room.Connection(params);
+		$(window).off("beforeunload", con.close);
 		con.on("calced", function(data) {
 			$.each(data, function(key, value) {
 				var $span = $("#" + key + " span");

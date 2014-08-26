@@ -8477,10 +8477,9 @@ function Processor(user, template, options) {
 		dialog = new ProcessingDialog($el, options);
 		dialog.cancelButton.click(cancel);
 	}
-	function prepare(data, func) {
+	function prepare(data) {
 		ticket = null;
 		canceled = false;
-		callback = func;
 		var params = {
 			"url" : makeUrl(options, "/prepare/" + user + "/" + template),
 			"type" : "POST",
@@ -8528,11 +8527,7 @@ function Processor(user, template, options) {
 					setTimeout(checkStatus, 1000);
 				} else if (status == Status.Finished) {
 					dialog.close();
-					if (isUpload()) {
-						finishUpload();
-					} else {
-						dialog.download(ticket);
-					}
+					dialog.download(ticket);
 				} else if (status == Status.Error) {
 					dialog.close();
 					options.error(data.msg);
@@ -8566,29 +8561,11 @@ function Processor(user, template, options) {
 		});
 		dialog.close();
 	}
-	function finishUpload() {
-		if (!ticket || canceled) {
-			return;
-		}
-		$.ajax({
-			"url" : makeUrl(options, "/finish/" + ticket),
-			"type" : "GET",
-			"success" : function(data) {
-				if (callback) {
-					callback(data);
-				}
-			},
-			"error" : function(xhr, status, e) {
-				options.error(status + ", " + e);
-			}
-		});
-	}
 	options = $.extend(defaults, options || {});
 	var self = this,
 		canceled = false,
 		ticket = null,
-		dialog = null,
-		callback = null;
+		dialog = null;
 	init();
 	$.extend(this, {
 		"prepare" : prepare
@@ -8729,6 +8706,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 			params.logger = console;
 		}
 		con = new room.Connection(params);
+		$(window).off("beforeunload", con.close);
 		con.on("calced", function(data) {
 			$.each(data, function(key, value) {
 				var $span = $("#" + key + " span");
@@ -8885,6 +8863,7 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		}
 	}
 	function release() {
+console.log("release-----------------------------------");
 		debug("ExcelReport.release");
 		if (con) {
 			con.close();
@@ -8976,6 +8955,7 @@ $.fn.excelReport = function(method, params, param2) {
 				value = $input.val(),
 				prev = ret[name],
 				type = typeof(prev);
+console.log("type: " + type);
 			if (type === "undefined") {
 				ret[name] = value;
 			} else if (type === "string") {
