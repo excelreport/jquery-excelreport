@@ -8171,7 +8171,7 @@ var
 		"Canceled" : "Canceled",
 		"Cancel" : "Cancel"
 	}, defaults = {
-		"baseUrl" : "",
+		"baseUrl" : "https://excelreport.net",
 		"contextUrl" : "download",
 		"showLoading" : true,
 		"width" : 320,
@@ -8677,7 +8677,6 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 		finish();
 	}
 	function openConnection() {
-console.log("openConnection: ");
 		function buildUrl() {
 			var url = "",
 				lang = defaults.lang || $("html").attr("lang") || "";
@@ -8726,7 +8725,6 @@ console.log("openConnection: ");
 			}
 		});
 		con.onOpen(function(event) {
-console.log("onOpen: " + first);
 			if (first) {
 				con.request({
 					"command" : "available",
@@ -8752,7 +8750,6 @@ console.log("onOpen: " + first);
 				first = false;
 			} else {
 				var values = $el.excelReport("data");
-console.log("reconnect: ", values);
 				$el.excelReport("update", values);
 			}
 		});

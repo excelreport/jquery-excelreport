@@ -15,7 +15,7 @@ var
 		"Canceled" : "Canceled",
 		"Cancel" : "Cancel"
 	}, defaults = {
-		"baseUrl" : "",
+		"baseUrl" : "https://excelreport.net",
 		"contextUrl" : "download",
 		"showLoading" : true,
 		"width" : 320,
