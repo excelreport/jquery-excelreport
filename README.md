@@ -12,14 +12,14 @@ All distributed files are in dist directory.
 - i18n/excelreport.msg_ja.[.min].js - language option
 
 
-### All-In-One
+## Dependencies
 All in one files include follwings.
 
 - jquery.excelreport.full[.min].js
   - [flotr2.js](https://github.com/HumbleSoftware/Flotr2)
   - [roomframework.js](https://github.com/shunjikonishi/roomframework)
   - [jquery.excel2canvas.js](https://github.com/shunjikonishi/excel2canvas)
-  - jquery.excel2chart.flotr2.js
+  - [jquery.excel2chart.flotr2.js](https://github.com/shunjikonishi/excel2canvas)
   - jquery.excelreport.js
 
 - jquery.excelreport.nochart[.min].js
@@ -27,5 +27,5 @@ All in one files include follwings.
   - jquery.excel2canvas.js
   - jquery.excelreport.js
 
-### License
+## License
 MIT
