@@ -9,7 +9,7 @@ function isFormData(data) {
 	return !$.isPlainObject(data);
 }
 function isNumeric(str) {
-	return $.isNumeric(str.replace(/,/g, ""));
+	return $.isNumeric(str.replace(/[\$,\\]/g, ""));
 }
 function debug() {
 	if (defaults.debug) {
