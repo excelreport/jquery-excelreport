@@ -44,7 +44,9 @@ $.fn.excelReport = function(method, params, param2) {
 				"live" : params.live,
 				"cache" : params.cache,
 				"complete" : params.complete,
-				"buildInput" : params.buildInput
+				"buildInput" : params.buildInput,
+				"calced" : params.calced,
+				"inputError" : params.inputError
 			};
 		if (position === "static") {
 			$el.css("position", "relative");

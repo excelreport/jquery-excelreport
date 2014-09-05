@@ -94,7 +94,13 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 						if (data == "OK") {
 							defaults.onRule.call($input[0], "modified", value);
 						} else {
-							defaults.onRule.call($input[0], "error", data);
+							var skipOnRule = false;
+							if (options.inputError) {
+								skipOnRule = options.inputError.call($input, id, value) === false;
+							}
+							if (!skipOnRule) {
+								defaults.onRule.call($input[0], "error", data);
+							}
 						}
 					}
 				});
@@ -139,6 +145,9 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 				$span.empty().append(value);
 				if (isNumeric(value) && !$span.hasClass("cell-ac")) {
 					$span.removeClass("cell-al").addClass("cell-ar");
+				}
+				if (options.calced) {
+					options.calced.call($("#" + key), key, value);
 				}
 			});
 		});

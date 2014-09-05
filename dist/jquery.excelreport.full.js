@@ -7399,6 +7399,9 @@ $(function() {
 					}
 				}, retryCount * settings.retryInterval);
 				retryCount++;
+			} else if (sendNoopHandle) {
+				clearInterval(sendNoopHandle);
+				sendNoopHandle = 0;
 			}
 		}
 		function onError(event) {
@@ -7439,13 +7442,17 @@ $(function() {
 			return socket;
 		}
 		function sendNoop(interval, sendIfHidden, commandName) {
-			return setInterval(function() {
+			if (sendNoopHandle) {
+				clearInterval(sendNoopHandle);
+			}
+			sendNoopHandle = setInterval(function() {
 				if (isConnected() && (sendIfHidden || isDocumentVisible())) {
 					request({
 						"command" : commandName || "noop"
 					});
 				}
 			}, interval * 1000);
+			return sendNoopHandle;
 		}
 		if (typeof(settings) === "string") {
 			settings = {
@@ -7462,6 +7469,7 @@ $(function() {
 			readyFuncs = [],
 			openning = false,
 			retryCount = 0,
+			sendNoopHandle = 0,
 			socket = createWebSocket();
 		$(window).on("beforeunload", close);
 		$(document).on(visibilityChangeProp, function() {
@@ -8660,7 +8668,13 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 						if (data == "OK") {
 							defaults.onRule.call($input[0], "modified", value);
 						} else {
-							defaults.onRule.call($input[0], "error", data);
+							var skipOnRule = false;
+							if (options.inputError) {
+								skipOnRule = options.inputError.call($input, id, value) === false;
+							}
+							if (!skipOnRule) {
+								defaults.onRule.call($input[0], "error", data);
+							}
 						}
 					}
 				});
@@ -8705,6 +8719,9 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 				$span.empty().append(value);
 				if (isNumeric(value) && !$span.hasClass("cell-ac")) {
 					$span.removeClass("cell-al").addClass("cell-ar");
+				}
+				if (options.calced) {
+					options.calced.call($("#" + key), key, value);
 				}
 			});
 		});
@@ -8933,7 +8950,9 @@ $.fn.excelReport = function(method, params, param2) {
 				"live" : params.live,
 				"cache" : params.cache,
 				"complete" : params.complete,
-				"buildInput" : params.buildInput
+				"buildInput" : params.buildInput,
+				"calced" : params.calced,
+				"inputError" : params.inputError
 			};
 		if (position === "static") {
 			$el.css("position", "relative");
