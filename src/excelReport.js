@@ -266,7 +266,9 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 	function finish() {
 		debug("ExcelReport.finish");
 		if (license == "Free") {
-			var $img = $("<img/>");
+			var $img = $("<img/>"),
+				$a = $("<a/>");
+			$a.attr("href", baseUrl);
 			$img.attr("src", baseUrl + "/assets/images/PoweredByExcelReport.png");
 			$img.css({
 				"position" : "absolute",
@@ -275,7 +277,8 @@ flect.ExcelReport = function($el, baseUrl, user, template, sheet, options) {
 				"z-index" : 1000
 			});
 			$img.addClass("exrep-logo");
-			$el.append($img);
+			$a.append($img);
+			$el.append($a);
 		}
 		if (options.complete) {
 			options.complete($el);
